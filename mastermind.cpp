@@ -338,7 +338,7 @@ int getDepth(){
             cout << "Enter search depth: ";
             cin >> n;
 
-            if(n > 0 && n < 2){
+            if(n >= 0 && n < 2){
                 return(n);
             }else{
                 cout << "Invalid" << endl;
