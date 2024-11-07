@@ -5,7 +5,6 @@
 #include <conio.h>
 #include <string>
 #include <algorithm>
-#include <unordered_map>
 
 #include "combonations.cpp"
 #include "profiler.cpp"
@@ -32,11 +31,9 @@ struct comparisonOutput{
     }
 };
 
-vector<string> colors;
+string characters;
 int numColors;
 int codeLength;
-
-vector<int> code;
 
 vector<vector<int>> allCombos;
 vector<vector<int>> guesses;
@@ -183,9 +180,9 @@ vector<guessObject> calculateBestGuesses(vector<vector<int>>& allCombonations, v
         int originalSize = currentCombos.size();
 
         for(comparisonOutput& out: allOutputs){
-                profiler.updateProfiler("Filter combos");
+                //profiler.updateProfiler("Filter combos");
             vector<vector<int>> filteredCombos = filterCombos(currentCombos,c,out);
-                profiler.updateProfiler("Filter combos");
+                //profiler.updateProfiler("Filter combos");
             double p = filteredCombos.size()/(double)currentCombos.size();
             double info = bits(p);
             
@@ -212,96 +209,215 @@ vector<guessObject> calculateBestGuesses(vector<vector<int>>& allCombonations, v
         guessList.push_back(g);
     }
 
-        profiler.updateProfiler("Sort guesses");
+        //profiler.updateProfiler("Sort guesses");
     if(recusion == 0){
         guessList = sortGuesses(guessList, guessList.size(),guessList[0].entropyList.size()-1);
     }else{
         guessList = sortGuesses(guessList, 1,guessList[0].entropyList.size()-1);
     }
-        profiler.updateProfiler("Sort guesses");
+        //profiler.updateProfiler("Sort guesses");
+    return(guessList);
+}
+
+vector<guessObject> getAllGuesses(vector<vector<int>>& allCombonations){
+    vector<guessObject> guessList;
+    guessList.reserve(allCombonations.size());
+    for(vector<int>& c: allCombonations){
+        guessObject g = guessObject();
+        g.guess = c;
+        g.probability = (double)1/allCombonations.size();
+        guessList.push_back(g);
+    }
     return(guessList);
 }
 
 void printCombos(vector<vector<int>>& combos){
     for(vector<int>& c: combos){
         for(int i: c){
-            cout << i<< " ";
+            std::cout << i<< " ";
         }
-        cout << "\n";
+        std::cout << "\n";
     }
-    cout << "\n";
+    std::cout << "\n";
 }
 
 vector<int> getGuess(){
-    vector<int> g;
-    string input;
-    cin >> input;
-    for(char c: input){
-        if(!isspace(c)){
-            g.push_back(c-'0');
+    while(true){
+        vector<int> g;
+        string input;
+        try{
+            cout << "Enter guess: ";
+            cin >> input;
+
+            for(char c: input){
+                if(!isspace(c)){
+                    int i = find(characters.begin(),characters.end(),c)-characters.begin();
+                    g.push_back(i);
+                }
+            }
+            if(g.size() == codeLength){
+                return(g);
+            }else{
+                cout << "Invalid" << endl;
+            }
+        }catch(...){
+            cout << "Error" << endl;
         }
+        cin.clear(); 
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
     }
-    return(g);
+}
+
+comparisonOutput getOutput(){
+    while(true){
+        comparisonOutput o;
+        string input;
+        try{
+            cout << "Enter output: ";
+            cin.clear(); 
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            std::getline(std::cin, input);
+
+            vector<string> parts;
+            std::string s = input;
+            std::string delimiter = ",";
+            size_t pos = 0;
+            std::string token;
+            while ((pos = s.find(delimiter)) != std::string::npos) {
+                token = s.substr(0, pos);
+
+                token.erase(0, token.find_first_not_of(" \t\n\r\f\v"));
+                token.erase(token.find_last_not_of(" \t\n\r\f\v") + 1);
+
+                parts.push_back(token);
+
+                s.erase(0, pos + delimiter.length());
+            }
+            parts.push_back(s);
+
+            if(parts.size() == 2){
+                o.correctColors = std::stoi(parts[0]);
+                o.correctSpot = std::stoi(parts[1]);
+                return(o);
+            }else{
+                cout << "Invalid" << endl;
+            }
+
+        }catch(...){
+            cout << "Error" << endl;
+        }
+        cin.clear(); 
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+}
+
+int getCodeLength(){
+    while(true){
+        int n;
+        try{
+            cout << "Enter code length: ";
+            cin >> n;
+
+            if(n > 0 && n < 10){
+                return(n);
+            }else{
+                cout << "Invalid" << endl;
+            }
+        }catch(...){
+            cout << "Error" << endl;
+        }
+        cin.clear(); 
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+}
+
+int getDepth(){
+    while(true){
+        int n;
+        try{
+            cout << "Enter search depth: ";
+            cin >> n;
+
+            if(n > 0 && n < 2){
+                return(n);
+            }else{
+                cout << "Invalid" << endl;
+            }
+        }catch(...){
+            cout << "Error" << endl;
+        }
+        cin.clear(); 
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
 }
 
 int main(){
-    colors = {"red","yellow","blue"};
-    numColors = colors.size();
-    numColors = 3;
-    codeLength = 3;
-    int depth = 3;
+    characters = "rgbynpkw";
+    numColors = characters.size();
+    codeLength = getCodeLength();
+    int depth = getDepth();
 
     possibleOutputs = getAllPossibleOutputs(codeLength);
 
-    code = randomCode(numColors, codeLength);
+    //code = randomCode(numColors, codeLength);
 
     allCombos = combonations::getCombonations(numColors, codeLength);
     vector<vector<int>> possibleCombos = allCombos;
 
     vector<int> guess;
 
-    for(int i: code){
-        cout << i;
-    }
-    cout << "\n\n";
+    // for(int i: code){
+    //     cout << characters[i];
+    // }
+    // cout << "\n\n";
 
     while(true){
         //printCombos(possibleCombos);
         cout << "Uncertainty: " << (-bits(possibleCombos.size())) << "\n";
-        getch();
+        _getch();
         cout << "Calculating...\n";
         
         profiler.start();
-        vector<guessObject> bestGuesses = calculateBestGuesses(allCombos, possibleCombos, possibleOutputs, depth);
+        vector<guessObject> bestGuesses = vector<guessObject>();
+        if(depth > 0){
+            bestGuesses = calculateBestGuesses(allCombos, possibleCombos, possibleOutputs, depth);
+        }else{
+            bestGuesses = getAllGuesses(possibleCombos);
+        }
         profiler.end();
-        profiler.logProfilerData();
+        //profiler.logProfilerData();
         
         cout << "Guess\tProbability\t";
         for(int i=0; i<depth; i++){
             cout << "E " << i+1 << "      \t";
         }cout << "\n";
+        int n = 0;
         for(guessObject g: bestGuesses){
+            n++;
             for(int i: g.guess){
-                cout << i;
+                cout << characters[i];
             }cout << " \t";
             cout << (g.probability);
             for(double e: g.entropyList){
                 cout << " \t" << (e);
             }cout << "\n";
+            if(n >= 10){
+                break;
+            }
         }
         cout <<"\n";
         
         guess = getGuess();
         //double e = bestGuesses[0].entropyList[0];
         guesses.push_back(guess);
-        comparisonOutput output = compare(code, guess);
+        comparisonOutput output;
+        output = getOutput();
         outputs.push_back(output);
-        cout << output.correctColors << " " << output.correctSpot << "\n";
 
         int previousLength = possibleCombos.size();
         possibleCombos = filterCombos(possibleCombos,guess,output);
 
-        cout << "Expected info: " << bestGuesses[0].entropyList[0] << " Actual info: " << bits(possibleCombos.size()/(double)previousLength) << "\n";
+        //cout << "Expected info: " << bestGuesses[0].entropyList[0] << " Actual info: " << bits(possibleCombos.size()/(double)previousLength) << "\n";
     }
 
     return(0);

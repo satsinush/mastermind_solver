@@ -1,0 +1,6 @@
+Total Run time: 56.765496s
+Profiler Data: Depth, Average time, Count, Total time, Percent
+Profiler: 0.000279ms, 122882, 0.034250s, 0%
+Filter combos: 0.889290ms, 61440, 54.637997s, 96%
+Sort guesses: 782.079935ms, 1, 0.782080s, 1%
+
